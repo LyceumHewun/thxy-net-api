@@ -1,5 +1,6 @@
-package cc.lyceum.api.thxy;
+package cc.lyceum.api.thxy.jwgl;
 
+import cc.lyceum.api.thxy.Client;
 import okhttp3.*;
 
 import java.io.IOException;
