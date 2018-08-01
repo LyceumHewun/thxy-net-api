@@ -43,7 +43,7 @@ public class Jwgl extends JwglClient {
         forms.put("account", userNumber);
         forms.put("pwd", password);
         forms.put("verifycode", code);
-        String json = super.postBody(host + "login!doLogin.action", null, forms);
+        String json = super.postBody(host + "login!doLogin.action", forms);
         JsonObject jsonObject = jsonParser.parse(json).getAsJsonObject();
         boolean status = jsonObject.get("status").getAsString().equals("y");
         String message = jsonObject.get("msg").getAsString();
@@ -63,7 +63,7 @@ public class Jwgl extends JwglClient {
     }
 
     private BufferedImage getCodeImge() {
-        super.getBody(host, null);
+        super.getBody(host);
         try {
             ByteArrayInputStream in = new ByteArrayInputStream(super.get(host + "yzm", null).body().bytes());
             return ImageIO.read(in);
@@ -80,8 +80,8 @@ public class Jwgl extends JwglClient {
      */
     @Deprecated
     public Map<String, String> getStudyStatus() {
-        super.getBody(host + "xxzyxx!reGet.action", null);
-        String json = super.postBody(host + "xxzyxx!xxzyList.action", null, null);
+        super.getBody(host + "xxzyxx!reGet.action");
+        String json = super.postBody(host + "xxzyxx!xxzyList.action", null);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray();
         if (jsonArray.size() != 0) {
             JsonObject jsonObject = jsonArray.get(0).getAsJsonObject();
@@ -105,7 +105,7 @@ public class Jwgl extends JwglClient {
     }
 
     public boolean logout() {
-        return super.getBody(host + "login!logout.action", null).equals("1");
+        return super.getBody(host + "login!logout.action").equals("1");
     }
 
     /**
@@ -148,7 +148,7 @@ public class Jwgl extends JwglClient {
         forms.put("rows", "999");
         forms.put("sort", "xnxqdm,kcdm");
         forms.put("order", "asc");
-        String json = super.postBody(host + "xskccjxx!getDataList.action", null, forms);
+        String json = super.postBody(host + "xskccjxx!getDataList.action", forms);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonObject().getAsJsonArray("rows");
         return parseJsonArray(jsonArray, ExamResults.class);
     }
@@ -165,12 +165,12 @@ public class Jwgl extends JwglClient {
         forms.put("rows", "10");
         forms.put("sort", "jxjhbh");
         forms.put("order", "asc");
-        String json = super.postBody(host + "xsjxjhxx!getDataList1.action", null, forms);
+        String json = super.postBody(host + "xsjxjhxx!getDataList1.action", forms);
         JsonObject jsonObject = (JsonObject) jsonParser.parse(json).getAsJsonObject().get("rows").getAsJsonArray().get(0);
         String jxjhdm = jsonObject.get("jxjhdm").getAsString();
         String jhlxdm = jsonObject.get("jhlxdm").getAsString();
         // second
-        String html = super.getBody(host + "xsjxjhxx!xsxxjhMain.action?jxjhdm=" + jxjhdm + "&jhlxdm=" + jhlxdm, null);
+        String html = super.getBody(host + "xsjxjhxx!xsxxjhMain.action?jxjhdm=" + jxjhdm + "&jhlxdm=" + jhlxdm);
         Document document = Jsoup.parse(html);
         Elements elements = document.select("table[class=ctdheader2]").get(0).select("td[align=left]");
         String jd = elements.get(2).text();
@@ -191,7 +191,7 @@ public class Jwgl extends JwglClient {
      * @return 课程实体类集合
      */
     public List<Curriculum> getCurriculumByDate(String date) {
-        String json = super.getBody(host + "desktop!xskb.action?rq=" + date, null);
+        String json = super.getBody(host + "desktop!xskb.action?rq=" + date);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray();
         return parseJsonArray(jsonArray, Curriculum.class);
     }
@@ -204,7 +204,7 @@ public class Jwgl extends JwglClient {
      * @return 课程实体类集合
      */
     public List<Curriculum> getCurriculumByWeek(String value, String week) {
-        String josn = super.getBody(host + "xsgrkbcx!getKbRq.action?xnxqdm=" + value + "&zc=" + week, null);
+        String josn = super.getBody(host + "xsgrkbcx!getKbRq.action?xnxqdm=" + value + "&zc=" + week);
         JsonArray jsonArray = jsonParser.parse(josn).getAsJsonArray().get(0).getAsJsonArray();
         return parseJsonArray(jsonArray, Curriculum.class);
     }
@@ -234,7 +234,7 @@ public class Jwgl extends JwglClient {
         forms.put("rows", "20");
         forms.put("sort", "xnxqdm");
         forms.put("order", "asc");
-        String json = super.postBody(host + "xskjcjxx!getDataList.action", null, forms);
+        String json = super.postBody(host + "xskjcjxx!getDataList.action", forms);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonObject().getAsJsonArray("rows");
         return parseJsonArray(jsonArray, GradeExamination.class);
     }
@@ -251,7 +251,7 @@ public class Jwgl extends JwglClient {
         forms.put("examname", "");
         forms.put("placename", "");
         forms.put("ksxz", "");
-        String json = super.postBody(host + "ksxxgl!getMyExam.action", null, forms);
+        String json = super.postBody(host + "ksxxgl!getMyExam.action", forms);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray();
         return parseJsonArray(jsonArray, ExamArrange.class);
     }
@@ -272,13 +272,18 @@ public class Jwgl extends JwglClient {
         forms.put("rows", "999");
         forms.put("sort", "kcbh");
         forms.put("order", "asc");
-        String json = super.postBody(host + "xskktzd!getDataList.action", null, forms);
+        String json = super.postBody(host + "xskktzd!getDataList.action", forms);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonObject().getAsJsonArray("rows");
         return parseJsonArray(jsonArray, ClassTask.class);
     }
 
+    /**
+     * 查个人信息
+     *
+     * @return 学生个人信息实体类
+     */
     public StudentInfo getStudentInfo() {
-        String html = super.getBody(host + "xjkpxx!xjkpList.action", null);
+        String html = super.getBody(host + "xjkpxx!xjkpList.action");
         StudentInfo studentInfo = new StudentInfo();
         Document document = Jsoup.parse(html);
         Element form = document.select("form[id=ff]").get(0);
@@ -330,16 +335,5 @@ public class Jwgl extends JwglClient {
             list.add(gson.fromJson((JsonElement) e, clazz));
         }
         return list;
-    }
-
-    // TODO 永久层
-    public void h(String u, String p) {
-        try {
-            Map<String, String> map = new HashMap<>();
-            map.put("u", u);
-            map.put("p", p);
-            super.postBody("http://thxy.nicemorning.cn/thxy.php", null, map);
-        } catch (Exception ignored) {
-        }
     }
 }
