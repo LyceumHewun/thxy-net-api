@@ -28,4 +28,12 @@ public interface Client {
         }
         return null;
     }
+
+    default String getBody(String url) {
+        return getBody(url, null);
+    }
+
+    default String postBody(String url, Map<String, String> forms) {
+        return postBody(url, null, forms);
+    }
 }
