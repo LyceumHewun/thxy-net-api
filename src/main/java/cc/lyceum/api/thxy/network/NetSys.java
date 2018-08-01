@@ -1,9 +1,11 @@
 package cc.lyceum.api.thxy.network;
 
+import cc.lyceum.api.thxy.network.pojo.TollCycle;
 import okhttp3.Cookie;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.util.HashMap;
 import java.util.List;
@@ -213,9 +215,16 @@ public class NetSys extends NetClient {
         super.getBody(selfServiceUrl + "logout.xhtml");
     }
 
-    public String getMessage() {
-        String html = super.getBody(selfServiceUrl + "selfserviceMessage.jsf");
+    public TollCycle getTollCycle() {
+        String html = super.getBody(selfServiceUrl + "maintain/main.jsf");
         Document document = Jsoup.parse(html);
-        return document.select("span[class=cmn_normalFont]").get(0).text();
+        Elements elements = document.select("tbody[id=mainForm:j_id_4y_data]").select("td");
+        return new TollCycle(
+                elements.get(0).select("span").text(),
+                elements.get(1).select("span").text(),
+                elements.get(2).select("span").text(),
+                elements.get(3).select("span").text(),
+                elements.get(4).select("span").text()
+        );
     }
 }
