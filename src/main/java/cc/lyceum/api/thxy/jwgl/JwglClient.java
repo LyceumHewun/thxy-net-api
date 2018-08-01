@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class JwglClient implements Client {
 
-    ConcurrentHashMap<String, List<Cookie>> cookieStore = new ConcurrentHashMap<>();
+    public ConcurrentHashMap<String, List<Cookie>> cookieStore = new ConcurrentHashMap<>();
 
     @Override
     public Response get(String url, Map<String, String> headers) throws IOException {
