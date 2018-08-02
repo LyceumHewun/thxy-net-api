@@ -1,21 +1,24 @@
-package cc.lyceum.api.thxy.jwgl;
+package cc.lyceum.api.thxy.logistics;
 
 import cc.lyceum.api.thxy.Client;
-import okhttp3.*;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
-public abstract class JwglClient implements Client {
+public abstract class LogisticsClient implements Client {
 
     @Override
     public Response get(String url, Map<String, String> headers) throws IOException {
 
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .readTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .connectTimeout(60, TimeUnit.SECONDS)
                 // cookie
                 .cookieJar(this.newCookieJar())
                 .build();
@@ -42,6 +45,9 @@ public abstract class JwglClient implements Client {
     @Override
     public Response post(String url, Map<String, String> headers, Map<String, String> forms) throws IOException {
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .readTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .connectTimeout(60, TimeUnit.SECONDS)
                 // cookie
                 .cookieJar(this.newCookieJar())
                 .build();
@@ -70,5 +76,35 @@ public abstract class JwglClient implements Client {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public String getBody(String url, Map<String, String> headers) {
+        try {
+            return new String(get(url, headers).body().bytes(), "GB2312");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    @Override
+    public String postBody(String url, Map<String, String> headers, Map<String, String> forms) {
+        try {
+            return new String(post(url, headers, forms).body().bytes(), "GB2312");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    @Override
+    public String getBody(String url) {
+        return this.getBody(url, null);
+    }
+
+    @Override
+    public String postBody(String url, Map<String, String> forms) {
+        return this.postBody(url, null, forms);
     }
 }
