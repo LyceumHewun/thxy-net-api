@@ -4,11 +4,9 @@
 
 [TOC]
 
-### 功能
+## 功能
 
-------
-
-##### 1.教务系统 (http://jwgl.thxy.cn/)
+### 1.教务系统 (http://jwgl.thxy.cn/)
 
 > 查成绩
 >
@@ -28,7 +26,7 @@
 >
 > 评教（暂未实现）
 
-##### 2.自助平台 (http://self.thxy.cn:8080/)
+### 2.自助平台 (http://self.thxy.cn:8080/)
 
 > 查询余额
 >
@@ -42,17 +40,17 @@
 >
 > 查计费周期
 
-##### 3.iMC Portal (http://10.0.8.9:8080/portal/)
+### 3.iMC Portal (http://10.0.8.9:8080/portal/)
 
 > 上线
 >
 > 下线
 
-#####  4.故障报修平台  (http://10.0.8.48/hq/baoxiu.php)
+###  4.故障报修平台  (http://10.0.8.48/hq/baoxiu.php)
 
 > 发报修单
 
-##### 5.用电查询平台 (http://10.0.8.50)
+### 5.用电查询平台 (http://10.0.8.50)
 
 > 查用电情况
 >
@@ -60,9 +58,9 @@
 >
 > 查缴费记录
 
-### 演示
+## 演示
 
-##### 1.教务系统查成绩
+### 1.教务系统查成绩
 
 ```java
 Jwgl jwgl = new Jwgl();
@@ -74,7 +72,7 @@ if ("登陆成功".equals(reslut)) {
 }
 ```
 
-##### 2.自助平台查余额
+### 2.自助平台查余额
 
 ```java
 NetSys netSys = new NetSys();
@@ -86,16 +84,16 @@ if ("success".equals(result)) {
 }
 ```
 
-### 反馈
+## 反馈
 
 可以扫下面的二维码添加公众号进行反馈
 
 ![wechat](https://coding.net/u/Lyceum/p/thxy-net-api/git/raw/master/demo/image/wechat.jpg)
 
-### License
+## License
 
 ```
-Copyright 2013 Lyceum Hewun
+Copyright 2018 Lyceum Hewun
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
