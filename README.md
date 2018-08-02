@@ -2,8 +2,8 @@
 
 这是一个基于OkHttp3开发的thxy校园网接口。内含各平台的验证码OCR代码，不支持Android
 
-第一版现已发布，点击即可下载。
-[![Github Releases (by Release)](https://img.shields.io/github/downloads/atom/atom/v0.190.0/total.svg)](https://coding.net/api/user/Lyceum/project/thxy-net-api/git/releases/attachments/download/10733)
+# 下载
+[![Github Releases (by Release)](https://img.shields.io/github/downloads/atom/atom/v1.0.0/total.svg)](https://coding.net/api/user/Lyceum/project/thxy-net-api/git/releases/attachments/download/10733)
 
 [TOC]
 
