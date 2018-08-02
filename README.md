@@ -1,8 +1,3 @@
----
-typora-root-url: demo\image
-typora-copy-images-to: demo\image
----
-
 # thxy-net-api
 
 这是一个基于OkHttp3开发的thxy校园网接口。内含各平台的验证码OCR代码，不支持Android
@@ -95,7 +90,7 @@ if ("success".equals(result)) {
 
 可以扫下面的二维码添加公众号进行反馈
 
-![wechat](/wechat.jpg)
+![wechat](https://coding.net/u/Lyceum/p/thxy-net-api/git/raw/master/demo/image/wechat.jpg)
 
 ### License
 
