@@ -4,8 +4,33 @@
 
 [TOC]
 
-# 下载
+## 下载
+
 [![Github Releases (by Release)](https://img.shields.io/github/downloads/atom/atom/v1.0.0/total.svg)](https://coding.net/api/user/Lyceum/project/thxy-net-api/git/releases/attachments/download/10733)
+
+## CHANGELOG
+
+## 依赖
+
+```Xml
+<dependencies>
+    <dependency>
+        <groupId>org.jsoup</groupId>
+        <artifactId>jsoup</artifactId>
+        <version>1.8.3</version>
+    </dependency>
+    <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>3.10.0</version>
+    </dependency>
+    <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>2.8.2</version>
+    </dependency>
+</dependencies>
+```
 
 ## 功能
 
@@ -17,7 +42,7 @@
 - 查课程表
 - 查考试安排
 - 查个人信息
-- 查个人照片
+- 获取个人照片
 - 抢课（暂未实现）
 - 评教（暂未实现）
 
