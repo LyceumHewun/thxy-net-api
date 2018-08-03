@@ -216,7 +216,7 @@ public class Jwgl extends JwglClient {
      * @return 课程实体类集合
      */
     public List<Curriculum> getCurriculum(String value) {
-        String html = super.getBody(host + "xsgrkbcx!xsAllKbList.action?xnxqdm=" + value, null);
+        String html = super.getBody(host + "xsgrkbcx!xsAllKbList.action?xnxqdm=" + value);
         html = html.substring(html.indexOf("var kbxx = "));
         String json = html.substring(11, html.indexOf(";"));
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray();
@@ -327,6 +327,28 @@ public class Jwgl extends JwglClient {
         studentInfo.setJgsq(select.get(4).select("option[selected]").text());
         studentInfo.setLysf(select.get(6).select("option[selected]").text());
         return studentInfo;
+    }
+
+    /**
+     * 获取学生照片</br>
+     * 先判断是否为 null
+     *
+     * @return BufferedImage
+     */
+    public BufferedImage getStudentImage() {
+        String html = super.getBody(host + "xjkpxx!xjkpList.action");
+        Document document = Jsoup.parse(html);
+        String imageUrl = host + document.select("img").attr("src");
+        try {
+            byte[] b = super.get(imageUrl, null).body().bytes();
+            if ("文件不存在".equals(new String(b))) {
+                return null;
+            } else {
+                return ImageIO.read(new ByteArrayInputStream(b));
+            }
+        } catch (IOException ignored) {
+            return null;
+        }
     }
 
     private <T> List<T> parseJsonArray(JsonArray jsonArray, Class<T> clazz) {
