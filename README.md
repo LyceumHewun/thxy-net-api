@@ -10,6 +10,10 @@
 
 ## CHANGELOG
 
+### v 1.0.1
+
+- 修复cookieStore共用导致空指针的bug
+
 ## 依赖
 
 ```Xml
