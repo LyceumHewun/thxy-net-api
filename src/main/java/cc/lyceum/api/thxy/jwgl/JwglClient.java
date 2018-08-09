@@ -4,20 +4,20 @@ import cc.lyceum.api.thxy.Client;
 import okhttp3.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class JwglClient implements Client {
+
+    public ConcurrentHashMap<String, List<Cookie>> cookieStore = new ConcurrentHashMap<>();
 
     @Override
     public Response get(String url, Map<String, String> headers) throws IOException {
 
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 // cookie
-                .cookieJar(this.newCookieJar())
+                .cookieJar(this.newCookieJar(cookieStore))
                 .build();
 
         Request.Builder requestBuilder = new Request.Builder()
@@ -43,7 +43,7 @@ public abstract class JwglClient implements Client {
     public Response post(String url, Map<String, String> headers, Map<String, String> forms) throws IOException {
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 // cookie
-                .cookieJar(this.newCookieJar())
+                .cookieJar(this.newCookieJar(cookieStore))
                 .build();
 
         Request.Builder requestBuilder = new Request.Builder()

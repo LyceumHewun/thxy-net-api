@@ -1,16 +1,17 @@
 package cc.lyceum.api.thxy.logistics;
 
 import cc.lyceum.api.thxy.Client;
-import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public abstract class LogisticsClient implements Client {
+
+    public ConcurrentHashMap<String, List<Cookie>> cookieStore = new ConcurrentHashMap<>();
 
     @Override
     public Response get(String url, Map<String, String> headers) throws IOException {
@@ -20,7 +21,7 @@ public abstract class LogisticsClient implements Client {
                 .writeTimeout(60, TimeUnit.SECONDS)
                 .connectTimeout(60, TimeUnit.SECONDS)
                 // cookie
-                .cookieJar(this.newCookieJar())
+                .cookieJar(this.newCookieJar(cookieStore))
                 .build();
 
         Request.Builder requestBuilder = new Request.Builder()
@@ -49,7 +50,7 @@ public abstract class LogisticsClient implements Client {
                 .writeTimeout(60, TimeUnit.SECONDS)
                 .connectTimeout(60, TimeUnit.SECONDS)
                 // cookie
-                .cookieJar(this.newCookieJar())
+                .cookieJar(this.newCookieJar(cookieStore))
                 .build();
 
         Request.Builder requestBuilder = new Request.Builder()

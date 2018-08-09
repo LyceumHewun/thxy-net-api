@@ -14,8 +14,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public interface Client {
 
-    public ConcurrentHashMap<String, List<Cookie>> cookieStore = new ConcurrentHashMap<>();
-
     public Response get(String url, Map<String, String> headers) throws IOException;
 
     public Response post(String url, Map<String, String> headers, Map<String, String> forms) throws IOException;
@@ -46,7 +44,7 @@ public interface Client {
         return postBody(url, null, forms);
     }
 
-    default CookieJar newCookieJar() {
+    default CookieJar newCookieJar(ConcurrentHashMap<String, List<Cookie>> cookieStore) {
         return new CookieJar() {
             @Override
             public void saveFromResponse(HttpUrl httpUrl, List<Cookie> list) {
