@@ -64,6 +64,7 @@ public class Utils {
         }
 
         public static String strToDormId(String str) {
+            str.replaceAll("#", "栋");
             StringBuilder s = new StringBuilder();
             map.forEach((k, v) -> {
                 if (str.contains(v)) {
