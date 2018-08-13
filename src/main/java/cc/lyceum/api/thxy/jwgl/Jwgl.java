@@ -11,10 +11,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * 教务系统接口
@@ -194,6 +192,10 @@ public class Jwgl extends JwglClient {
         String json = super.getBody(host + "desktop!xskb.action?rq=" + date);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray();
         return parseJsonArray(jsonArray, Curriculum.class);
+    }
+
+    public List<Curriculum> getCurriculumByDate() {
+        return getCurriculumByDate(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
     }
 
     /**

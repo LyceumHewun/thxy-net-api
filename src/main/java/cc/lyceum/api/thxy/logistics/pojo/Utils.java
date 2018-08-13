@@ -63,24 +63,25 @@ public class Utils {
             map.put("41", "新区配电");
         }
 
-        public static String strToDormId(String str) {
-            str.replaceAll("#", "栋");
+        public static String strToSectId(String str) {
+            str = str.replaceAll("#", "栋");
             StringBuilder s = new StringBuilder();
+            String finalStr = str;
             map.forEach((k, v) -> {
-                if (str.contains(v)) {
+                if (finalStr.contains(v)) {
                     s.append(k);
                 }
             });
             return s.toString();
         }
 
-        public static String dormIdToStr(String dormId, boolean b) {
-            String str = map.get(dormId);
+        public static String sectIdToStr(String sectid, boolean b) {
+            String str = map.get(sectid);
             return b ? str.replaceAll("栋", "#") : str;
         }
 
-        public static String dormIdToStr(String dormId) {
-            return dormIdToStr(dormId, true);
+        public static String sectIdToStr(String sectid) {
+            return sectIdToStr(sectid, true);
         }
     }
 }
