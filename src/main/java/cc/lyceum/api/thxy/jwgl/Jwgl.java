@@ -206,8 +206,8 @@ public class Jwgl extends JwglClient {
      * @return 课程实体类集合
      */
     public List<Curriculum> getCurriculumByWeek(String value, String week) {
-        String josn = super.getBody(host + "xsgrkbcx!getKbRq.action?xnxqdm=" + value + "&zc=" + week);
-        JsonArray jsonArray = jsonParser.parse(josn).getAsJsonArray().get(0).getAsJsonArray();
+        String json = super.getBody(host + "xsgrkbcx!getKbRq.action?xnxqdm=" + value + "&zc=" + week);
+        JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray().get(0).getAsJsonArray();
         return parseJsonArray(jsonArray, Curriculum.class);
     }
 
@@ -222,6 +222,30 @@ public class Jwgl extends JwglClient {
         html = html.substring(html.indexOf("var kbxx = "));
         String json = html.substring(11, html.indexOf(";"));
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray();
+        return parseJsonArray(jsonArray, Curriculum.class);
+    }
+
+    /**
+     * 列表展示, 查课程表
+     *
+     * @param value 参考 {@link Jwgl#getExamResults(String)} 方法的参数value
+     * @return 课程实体类集合
+     */
+    public List<Curriculum> getCurriculumList(String value) {
+        // 获取班级代码
+        String html = super.getBody(host + "xsbjkbcx!xsbjkbMain.action");
+        String bjdm = Jsoup.parse(html).select("select[id=bjdm]").get(0).children().select("option[selected]").attr("value");
+        // 查课表
+        Map<String, String> forms = new HashMap<>();
+        forms.put("zc", "");
+        forms.put("xnxqdm", value);
+        forms.put("bjdm", bjdm);
+        forms.put("page", "1");
+        forms.put("rows", "999");
+        forms.put("sort", "kxh");
+        forms.put("order", "asc");
+        String json = super.postBody(host + "xsbjkbcx!getDataList.action", forms);
+        JsonArray jsonArray = jsonParser.parse(json).getAsJsonObject().get("rows").getAsJsonArray();
         return parseJsonArray(jsonArray, Curriculum.class);
     }
 

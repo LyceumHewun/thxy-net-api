@@ -237,7 +237,7 @@ public class CourseTime {
         }
 
         public static String getTime(Calendar calendar) {
-            return new SimpleDateFormat("HH:mm:ss").format(calendar.getTime());
+            return new SimpleDateFormat("HH:mm").format(calendar.getTime());
         }
 
         public static String getJetLag(Calendar c1, Calendar c2) {
@@ -251,7 +251,7 @@ public class CourseTime {
                 l2 = c1.getTime().getTime();
             }
             Date date = new Date(l1 - l2);
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("H小时m分s秒");
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("H小时mm分ss秒");
             simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT-0:00"));
             String jetLag = simpleDateFormat.format(date);
             if (jetLag.startsWith("0小时0分")) {
