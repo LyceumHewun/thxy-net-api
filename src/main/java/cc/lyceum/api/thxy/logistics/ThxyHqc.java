@@ -1,5 +1,7 @@
 package cc.lyceum.api.thxy.logistics;
 
+import cc.lyceum.api.thxy.Client;
+import cc.lyceum.api.thxy.ClientFactory;
 import cc.lyceum.api.thxy.logistics.pojo.Ammeter;
 import cc.lyceum.api.thxy.logistics.pojo.FreeInfo;
 import cc.lyceum.api.thxy.logistics.pojo.PaymentRecord;
@@ -12,7 +14,36 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Logistics extends LogisticsClient {
+/**
+ * 后勤处
+ *
+ * @author LyceumHewun
+ * @date 2018-9-6
+ */
+public class ThxyHqc {
+
+    private Client client = ClientFactory.creatClient("GB2312");
+
+    /**
+     * 保修
+     */
+    private String host1 = "http://10.0.8.48/";
+    /**
+     * 查电
+     */
+    private String host2 = "http://10.0.8.50/";
+
+    public ThxyHqc() {
+    }
+
+    public ThxyHqc(String... host) {
+        if (!"".equals(host[0]) && !"default".equals(host[0])) {
+            this.host1 = host[0];
+        }
+        if (!"".equals(host[1]) && !"default".equals(host[1])) {
+            this.host2 = host[1];
+        }
+    }
 
     /**
      * 发送保修单</br>
@@ -118,11 +149,13 @@ public class Logistics extends LogisticsClient {
         forms.put("Gzlx_ID", Gzlx_ID);
         forms.put("description", description);
         forms.put("check", "yes");
-        String html = super.postBody("http://10.0.8.48/hq/baoxiu_do.php", forms);
+        Client client = ClientFactory.creatClient();
+        String html = client.postBody(host1 + "hq/baoxiu_do.php", forms);
         String repairOrder = html.substring(html.indexOf("您的报修单号是：") + 8);
         repairOrder = repairOrder.substring(0, repairOrder.indexOf("，"));
         return repairOrder;
     }
+
 
     /**
      * 登陆电费系统
@@ -192,7 +225,7 @@ public class Logistics extends LogisticsClient {
         forms.put("sectid", sectid);
         forms.put("user_no", user_no);
         forms.put("user_pass", user_pass);
-        String html = super.postBody("http://10.0.8.50/login.asp", forms);
+        String html = client.postBody(host2 + "login.asp", forms);
         if (html.contains("history.back()")) {
             html = html.substring(html.indexOf("alert('") + 7, html.indexOf("');")).replace("请返回……", "");
             return html;
@@ -202,14 +235,16 @@ public class Logistics extends LogisticsClient {
     }
 
     /**
+     * 主界面
+     * <p>
      * 查用电情况
      * <p>
-     * 先使用 {@link Logistics#login(String, String, String)} 登陆
+     * 先使用 {@link ThxyHqc#login(String, String, String)} 登陆
      *
      * @return Ammeter
      */
     public Ammeter getAmmeter() {
-        String html = super.getBody("http://10.0.8.50/mainn.asp");
+        String html = client.getBody(host2 + "mainn.asp");
         Elements elements = Jsoup.parse(html).select("table").get(1).select("tr").get(1).select("td");
         return new Ammeter(
                 elements.get(0).text(),
@@ -221,6 +256,8 @@ public class Logistics extends LogisticsClient {
     }
 
     /**
+     * 主界面 -> 历史电量查询
+     * <p>
      * 根据年查用电情况
      *
      * @param year 年
@@ -231,7 +268,7 @@ public class Logistics extends LogisticsClient {
         forms.put("Sp_id", year);
         forms.put("St_class", "");
         forms.put("Submit", "+/v8- +//3//Q- +//3//Q- ");
-        String html = super.postBody("http://10.0.8.50/payhisguest.asp", forms);
+        String html = client.postBody(host2 + "payhisguest.asp", forms);
         try {
             Elements elements = Jsoup.parse(html).select("table").get(1).select("tr[bgcolor=#FFFFFF]");
             List<UseInfo> list = new ArrayList<>();
@@ -256,6 +293,8 @@ public class Logistics extends LogisticsClient {
     }
 
     /**
+     * 主界面 -> 免费电量查询
+     * <p>
      * 根据年查免费送电情况
      *
      * @param year 年
@@ -266,7 +305,7 @@ public class Logistics extends LogisticsClient {
         forms.put("Sp_id", year);
         forms.put("St_class", "");
         forms.put("Submit", "+/v8- +//3//Q- +//3//Q- ");
-        String html = super.postBody("http://10.0.8.50/payfreeguest.asp", forms);
+        String html = client.postBody(host2 + "payfreeguest.asp", forms);
         try {
             Elements elements = Jsoup.parse(html).select("table").get(1).select("tr[bgcolor=#FFFFFF]");
             List<FreeInfo> list = new ArrayList<>();
@@ -291,6 +330,8 @@ public class Logistics extends LogisticsClient {
     }
 
     /**
+     * 主界面 -> 缴费查询
+     * <p>
      * 根据年查缴费情况
      *
      * @param year 年
@@ -301,7 +342,7 @@ public class Logistics extends LogisticsClient {
         forms.put("Sp_id", year);
         forms.put("St_class", "");
         forms.put("Submit", "+/v8- +//3//Q- +//3//Q- ");
-        String html = super.postBody("http://10.0.8.50/payguest.asp", forms);
+        String html = client.postBody(host2 + "payguest.asp", forms);
         try {
             Elements elements = Jsoup.parse(html).select("table").get(1).select("tr[bgcolor=#FFFFFF]");
             List<PaymentRecord> list = new ArrayList<>();
@@ -321,4 +362,5 @@ public class Logistics extends LogisticsClient {
             return null;
         }
     }
+
 }

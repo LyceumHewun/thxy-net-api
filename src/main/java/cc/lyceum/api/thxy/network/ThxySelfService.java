@@ -1,5 +1,7 @@
 package cc.lyceum.api.thxy.network;
 
+import cc.lyceum.api.thxy.Client;
+import cc.lyceum.api.thxy.ClientFactory;
 import cc.lyceum.api.thxy.network.pojo.TollCycle;
 import okhttp3.Cookie;
 import org.jsoup.Jsoup;
@@ -11,39 +13,60 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class NetSys extends NetClient {
+/**
+ * 自助平台
+ *
+ * @author LyceumHewun
+ * @date 2018-9-6
+ */
+public class ThxySelfService {
 
-    private final String selfServiceHost = "self.thxy.cn:8080";
-    private final String selfServiceUrl = "http://" + selfServiceHost + "/selfservice/";
+    private Client client = ClientFactory.creatClient();
 
-    // 获取自助平台的cookie、state和验证码url
+    private String host = "http://self.thxy.cn:8080/selfservice/";
+
+    public ThxySelfService() {
+    }
+
+    public ThxySelfService(String host) {
+        this.host = host;
+    }
+
+    /**
+     * 获取验证码url、cookie、state
+     *
+     * @return state和验证码url
+     */
     private Map<String, String> getState() {
-        String body = super.getBody(selfServiceUrl + "login.jsf");
-        Map<String, String> result = new HashMap<>();
+        String body = client.getBody(host + "login.jsf");
+        Map<String, String> result = new HashMap<>(2);
         Document document = Jsoup.parse(body);
-        result.put("codeUrl", "http://" + selfServiceHost + document.select("[align=absmiddle]").get(0).empty().attr("src"));
+        // 后面网页上获取的url里面包含/selfservice/
+        result.put("codeUrl", host.replaceAll("/selfservice/", "") + document.select("[align=absmiddle]").get(0).empty().attr("src"));
         result.put("state", document.select("[id=javax.faces.ViewState]").get(0).empty().attr("value"));
         return result;
     }
 
-    // 自助平台登陆
+    /**
+     * 登陆
+     *
+     * @param usernumber 学号
+     * @param password   校园网密码
+     * @return 登陆状态信息
+     */
     public String login(String usernumber, String password) {
-
         Map<String, String> info = this.getState();
         String codeUrl = info.get("codeUrl");
         String state = info.get("state");
-
         // 识别验证码
         String code = new Discern().getCode(codeUrl);
         // 识别失败，重来
         if (code == null) {
             return login(usernumber, password);
         }
-
         // headers
         Map<String, String> headers = new HashMap<>();
-        headers.put("Referer", selfServiceUrl + "login.jsf");
-
+        headers.put("Referer", host + "login.jsf");
         // forms
         Map<String, String> forms = new HashMap<>();
         forms.put("mainForm:username", usernumber);
@@ -57,7 +80,7 @@ public class NetSys extends NetClient {
         forms.put("mainForm_SUBMIT", "1");
         forms.put("javax.faces.ViewState", state);
 
-        String result = super.postBody(selfServiceUrl + "login.jsf", headers, forms);
+        String result = client.postBody(host + "login.jsf", headers, forms);
         String error = "fail";
         Document document = Jsoup.parse(result);
 
@@ -70,7 +93,7 @@ public class NetSys extends NetClient {
             }
         }
 
-        for (Map.Entry<String, List<Cookie>> cookies : cookieStore.entrySet()) {
+        for (Map.Entry<String, List<Cookie>> cookies : client.getCookieStore().entrySet()) {
             for (Cookie cookie : cookies.getValue()) {
                 if ("oam.Flash.REDIRECT".equals(cookie.name())) {
                     return "success";
@@ -78,14 +101,19 @@ public class NetSys extends NetClient {
             }
         }
 
-        // 失败
         return error;
     }
 
-    // 获取余额
+    /**
+     * 用户资料维护 -> 查询用户资料
+     * <p>
+     * 获取个人信息及帐号余额
+     *
+     * @return Map<String, String>
+     */
     public Map<String, String> getInfo() {
         Map<String, String> result = new HashMap<>();
-        String html = super.getBody(selfServiceUrl + "maintain/main.jsf");
+        String html = client.getBody(host + "maintain/main.jsf");
         try {
             Document document = Jsoup.parse(html);
             result.put("name", document.select("td[class=cmn_wdper_30]").get(4).text());
@@ -100,9 +128,15 @@ public class NetSys extends NetClient {
         }
     }
 
-    // 获取在线设备的MAC地址
+    /**
+     * 自助营业厅 -> 在线用户列表
+     * <p>
+     * 获取在线设备的MAC地址
+     *
+     * @return String
+     */
     public String getOnlineEquipmentMACAddress() {
-        String result = super.getBody(selfServiceUrl + "fee/onlineDetail.jsf");
+        String result = client.getBody(host + "fee/onlineDetail.jsf");
         try {
             Document document = Jsoup.parse(result);
             try {
@@ -115,9 +149,16 @@ public class NetSys extends NetClient {
         }
     }
 
+    /**
+     * 终端设备管理 -> 终端设备列表
+     * <p>
+     * 清空终端设备列表
+     *
+     * @return String
+     */
     public String removeMacList() {
         // get
-        String result = super.getBody(selfServiceUrl + "snac/macList.jsf");
+        String result = client.getBody(host + "snac/macList.jsf");
         try {
             Document document = Jsoup.parse(result);
             String ViewState = document.select("input[name=javax.faces.ViewState]").get(0).attr("value");
@@ -143,7 +184,7 @@ public class NetSys extends NetClient {
 
             // headers
             Map<String, String> headers = new HashMap<>();
-            headers.put("Referer", selfServiceUrl + "snac/macList.jsf");
+            headers.put("Referer", host + "snac/macList.jsf");
 
             // forms
             Map<String, String> forms = new HashMap<>();
@@ -155,7 +196,7 @@ public class NetSys extends NetClient {
                 forms.put("mainForm:data_checkbox", "on");
             }
 
-            super.post(selfServiceUrl + "snac/macList.jsf", headers, forms);
+            client.post(host + "snac/macList.jsf", headers, forms);
 
             return "success";
 
@@ -164,37 +205,42 @@ public class NetSys extends NetClient {
         }
     }
 
-    // 清除在线
+    /**
+     * 自助营业厅 -> 在线用户列表
+     * <p>
+     * 清除在线(踢下线)
+     *
+     * @return String
+     */
     public String clearLogin() {
         try {
             // get
-
-            String result = super.getBody(selfServiceUrl + "fee/onlineDetail.jsf");
-
+            String result = client.getBody(host + "fee/onlineDetail.jsf");
             Document document = Jsoup.parse(result);
             String ViewState = document.select("input[name=javax.faces.ViewState]").get(0).attr("value");
-
             // post
-
             // forms
-            Map<String, String> forms = new HashMap<>();
+            Map<String, String> forms = new HashMap<>(3);
             forms.put("mainForm_SUBMIT", "1");
             forms.put("javax.faces.ViewState", ViewState);
             forms.put("mainForm:data:0:j_id_3j", "mainForm:data:0:j_id_3j");
-
-            super.postBody(selfServiceUrl + "fee/onlineDetail.jsf", forms);
-
+            client.postBody(host + "fee/onlineDetail.jsf", forms);
             return "success";
-
         } catch (Exception ignored) {
         }
-
         return "fail";
     }
 
+    /**
+     * 自助营业厅 -> 查询缴费记录
+     * <p>
+     * 充值记录
+     *
+     * @return Map<Integer, Map<String, String>>
+     */
     public Map<Integer, Map<String, String>> getPaymentRecord() {
         Map<Integer, Map<String, String>> result = new HashMap<>();
-        String html = super.getBody(selfServiceUrl + "fee/paymentRecord.jsf");
+        String html = client.getBody(host + "fee/paymentRecord.jsf");
         try {
             Document document = Jsoup.parse(html);
             document.select("tr[data-ri]").forEach(element ->
@@ -211,12 +257,22 @@ public class NetSys extends NetClient {
         return null;
     }
 
+    /**
+     * 退出登录
+     */
     public void logout() {
-        super.getBody(selfServiceUrl + "logout.xhtml");
+        client.getBody(host + "logout.xhtml");
     }
 
+    /**
+     * 用户资料维护 -> 查询用户资料 -> 已申请的服务信息
+     * <p>
+     * 收费周期
+     *
+     * @return TollCycle
+     */
     public TollCycle getTollCycle() {
-        String html = super.getBody(selfServiceUrl + "maintain/main.jsf");
+        String html = client.getBody(host + "maintain/main.jsf");
         Document document = Jsoup.parse(html);
         Elements elements = document.select("tbody[id=mainForm:j_id_4y_data]").select("td");
         return new TollCycle(

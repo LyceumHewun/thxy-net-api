@@ -1,5 +1,7 @@
 package cc.lyceum.api.thxy.jwgl;
 
+import cc.lyceum.api.thxy.Client;
+import cc.lyceum.api.thxy.ClientFactory;
 import cc.lyceum.api.thxy.jwgl.pojo.*;
 import com.google.gson.*;
 import org.jsoup.Jsoup;
@@ -15,23 +17,34 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
- * 教务系统接口
+ * 教务系统
  *
- * @author Lyceum Hewun
- * @version 1.0.0
- * @date 2018-08-01
+ * @author LyceumHewun
+ * @date 2018-9-6
  */
-public class Jwgl extends JwglClient {
+public class ThxyJwgl {
 
-    private String host = "http://jwgl.thxy.cn/";
-
-    public void setHost(String host) {
-        this.host = "http://" + host + "/";
-    }
+    private Client client = ClientFactory.creatClient();
 
     private Gson gson = new Gson();
     private JsonParser jsonParser = new JsonParser();
 
+    private String host = "http://jwgl.thxy.cn/";
+
+    public ThxyJwgl() {
+    }
+
+    public ThxyJwgl(String host) {
+        this.host = host;
+    }
+
+    /**
+     * 登陆
+     *
+     * @param userNumber 学号
+     * @param password   教务系统密码
+     * @return 登陆状态
+     */
     public String login(String userNumber, String password) {
         // 验证码识别
         String code = Dictionary.contrast(new ImageHelper(getCodeImge())
@@ -41,12 +54,12 @@ public class Jwgl extends JwglClient {
         forms.put("account", userNumber);
         forms.put("pwd", password);
         forms.put("verifycode", code);
-        String json = super.postBody(host + "login!doLogin.action", forms);
+        String json = client.postBody(host + "login!doLogin.action", forms);
         JsonObject jsonObject = jsonParser.parse(json).getAsJsonObject();
         boolean status = jsonObject.get("status").getAsString().equals("y");
         String message = jsonObject.get("msg").getAsString();
         if (status) {
-            return "登陆成功";
+            return "success";
         } else if (message.contains("验证码不正确")) {
             return login(userNumber, password);
         } else if (message.contains("连接已过期")) {
@@ -60,10 +73,15 @@ public class Jwgl extends JwglClient {
         }
     }
 
+    /**
+     * 获取验证码
+     *
+     * @return BufferedImage
+     */
     private BufferedImage getCodeImge() {
-        super.getBody(host);
+        client.getBody(host);
         try {
-            ByteArrayInputStream in = new ByteArrayInputStream(super.get(host + "yzm", null).body().bytes());
+            ByteArrayInputStream in = new ByteArrayInputStream(client.get(host + "yzm", null).body().bytes());
             return ImageIO.read(in);
         } catch (IOException ignored) {
             return null;
@@ -71,15 +89,28 @@ public class Jwgl extends JwglClient {
     }
 
     /**
+     * 退出登陆
+     * <p>
+     * 建议每次调用完该类后使用
+     *
+     * @return boolean
+     */
+    public boolean logout() {
+        return client.getBody(host + "login!logout.action").equals("1");
+    }
+
+    /**
+     * 我的桌面 -> 学习情况
+     * <p>
      * 主页学习情况，可以看到学分、绩点，但是没有学习计划准确</br>
-     * 建议使用 {@link Jwgl#getStudyPlan()}
+     * 建议使用 {@link ThxyJwgl#getStudyPlan()}
      *
      * @return tjmc1 对应 tjz1, tjmc2、tjmc3亦如此
      */
     @Deprecated
     public Map<String, String> getStudyStatus() {
-        super.getBody(host + "xxzyxx!reGet.action");
-        String json = super.postBody(host + "xxzyxx!xxzyList.action", null);
+        client.getBody(host + "xxzyxx!reGet.action");
+        String json = client.postBody(host + "xxzyxx!xxzyList.action", null);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray();
         if (jsonArray.size() != 0) {
             JsonObject jsonObject = jsonArray.get(0).getAsJsonObject();
@@ -102,11 +133,9 @@ public class Jwgl extends JwglClient {
         }
     }
 
-    public boolean logout() {
-        return super.getBody(host + "login!logout.action").equals("1");
-    }
-
     /**
+     * 信息查询 -> 课程成绩
+     * <p>
      * 查成绩
      * </br>
      * value=""        全部</br>
@@ -146,12 +175,14 @@ public class Jwgl extends JwglClient {
         forms.put("rows", "999");
         forms.put("sort", "xnxqdm,kcdm");
         forms.put("order", "asc");
-        String json = super.postBody(host + "xskccjxx!getDataList.action", forms);
+        String json = client.postBody(host + "xskccjxx!getDataList.action", forms);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonObject().getAsJsonArray("rows");
         return parseJsonArray(jsonArray, ExamResults.class);
     }
 
     /**
+     * 信息查询 -> 学习计划 -> 预审
+     * <p>
      * 查详细学分、平均绩点
      *
      * @return 学习计划实体类
@@ -163,12 +194,12 @@ public class Jwgl extends JwglClient {
         forms.put("rows", "10");
         forms.put("sort", "jxjhbh");
         forms.put("order", "asc");
-        String json = super.postBody(host + "xsjxjhxx!getDataList1.action", forms);
+        String json = client.postBody(host + "xsjxjhxx!getDataList1.action", forms);
         JsonObject jsonObject = (JsonObject) jsonParser.parse(json).getAsJsonObject().get("rows").getAsJsonArray().get(0);
         String jxjhdm = jsonObject.get("jxjhdm").getAsString();
         String jhlxdm = jsonObject.get("jhlxdm").getAsString();
         // second
-        String html = super.getBody(host + "xsjxjhxx!xsxxjhMain.action?jxjhdm=" + jxjhdm + "&jhlxdm=" + jhlxdm);
+        String html = client.getBody(host + "xsjxjhxx!xsxxjhMain.action?jxjhdm=" + jxjhdm + "&jhlxdm=" + jhlxdm);
         Document document = Jsoup.parse(html);
         Elements elements = document.select("table[class=ctdheader2]").get(0).select("td[align=left]");
         String jd = elements.get(2).text();
@@ -183,42 +214,56 @@ public class Jwgl extends JwglClient {
     }
 
     /**
-     * 根据日期查当天课程
+     * 我的桌面 -> 课表查询
+     * <p>
+     * 根据日期查当天课程, 查的是个人课表
      *
      * @param date yyyy-MM-dd  2018-07-30
      * @return 课程实体类集合
      */
     public List<Curriculum> getCurriculumByDate(String date) {
-        String json = super.getBody(host + "desktop!xskb.action?rq=" + date);
+        String json = client.getBody(host + "desktop!xskb.action?rq=" + date);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray();
         return parseJsonArray(jsonArray, Curriculum.class);
     }
 
+    /**
+     * 我的桌面 -> 课表查询
+     * <p>
+     * 获取今天的课程
+     *
+     * @return 课程实体类集合
+     */
     public List<Curriculum> getCurriculumByDate() {
         return getCurriculumByDate(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
     }
 
     /**
+     * 信息查询 -> 课表查询
+     * <p>
      * 根据学期和周次查课程
      *
-     * @param value 参考 {@link Jwgl#getExamResults(String)} 方法的参数value
-     * @param week  第几周
+     * @param value 参考 {@link ThxyJwgl#getExamResults(String)} 方法的参数value
+     * @param week  第几周, 空字符串查全部
      * @return 课程实体类集合
      */
     public List<Curriculum> getCurriculumByWeek(String value, String week) {
-        String json = super.getBody(host + "xsgrkbcx!getKbRq.action?xnxqdm=" + value + "&zc=" + week);
+        String json = client.getBody(host + "xsgrkbcx!getKbRq.action?xnxqdm=" + value + "&zc=" + week);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray().get(0).getAsJsonArray();
         return parseJsonArray(jsonArray, Curriculum.class);
     }
 
     /**
+     * 信息查询 -> 班级课表
+     * <p>
      * 根据学期查课程
      *
-     * @param value 参考 {@link Jwgl#getExamResults(String)} 方法的参数value
+     * @param value 参考 {@link ThxyJwgl#getExamResults(String)} 方法的参数value
+     * @param week  第几周, 空字符串查全部
      * @return 课程实体类集合
      */
-    public List<Curriculum> getCurriculum(String value) {
-        String html = super.getBody(host + "xsgrkbcx!xsAllKbList.action?xnxqdm=" + value);
+    public List<Curriculum> getCurriculum(String value, String week) {
+        String html = client.getBody(host + "xsgrkbcx!xsAllKbList.action?xnxqdm=" + value + "&zc=" + week);
         html = html.substring(html.indexOf("var kbxx = "));
         String json = html.substring(11, html.indexOf(";"));
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray();
@@ -226,14 +271,16 @@ public class Jwgl extends JwglClient {
     }
 
     /**
+     * 信息查询 -> 班级课表 -> 列表展示
+     * <p>
      * 列表展示, 查课程表
      *
-     * @param value 参考 {@link Jwgl#getExamResults(String)} 方法的参数value
+     * @param value 参考 {@link ThxyJwgl#getExamResults(String)} 方法的参数value
      * @return 课程实体类集合
      */
     public List<Curriculum> getCurriculumList(String value) {
         // 获取班级代码
-        String html = super.getBody(host + "xsbjkbcx!xsbjkbMain.action");
+        String html = client.getBody(host + "xsbjkbcx!xsbjkbMain.action");
         String bjdm = Jsoup.parse(html).select("select[id=bjdm]").get(0).children().select("option[selected]").attr("value");
         // 查课表
         Map<String, String> forms = new HashMap<>();
@@ -244,12 +291,14 @@ public class Jwgl extends JwglClient {
         forms.put("rows", "999");
         forms.put("sort", "kxh");
         forms.put("order", "asc");
-        String json = super.postBody(host + "xsbjkbcx!getDataList.action", forms);
+        String json = client.postBody(host + "xsbjkbcx!getDataList.action", forms);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonObject().get("rows").getAsJsonArray();
         return parseJsonArray(jsonArray, Curriculum.class);
     }
 
     /**
+     * 信息查询 -> 考级成绩
+     * <p>
      * 查考级成绩
      *
      * @return 考级成绩实体类集合
@@ -257,18 +306,20 @@ public class Jwgl extends JwglClient {
     public List<GradeExamination> getGradeExamination() {
         Map<String, String> forms = new HashMap<>();
         forms.put("page", "1");
-        forms.put("rows", "20");
+        forms.put("rows", "999");
         forms.put("sort", "xnxqdm");
         forms.put("order", "asc");
-        String json = super.postBody(host + "xskjcjxx!getDataList.action", forms);
+        String json = client.postBody(host + "xskjcjxx!getDataList.action", forms);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonObject().getAsJsonArray("rows");
         return parseJsonArray(jsonArray, GradeExamination.class);
     }
 
     /**
+     * 信息查询 -> 考试信息查询
+     * <p>
      * 根据学期查考试安排
      *
-     * @param value 参考 {@link Jwgl#getExamResults(String)} 方法的参数value
+     * @param value 参考 {@link ThxyJwgl#getExamResults(String)} 方法的参数value
      * @return 考试安排实体类集合
      */
     public List<ExamArrange> getExamArrange(String value) {
@@ -277,15 +328,17 @@ public class Jwgl extends JwglClient {
         forms.put("examname", "");
         forms.put("placename", "");
         forms.put("ksxz", "");
-        String json = super.postBody(host + "ksxxgl!getMyExam.action", forms);
+        String json = client.postBody(host + "ksxxgl!getMyExam.action", forms);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray();
         return parseJsonArray(jsonArray, ExamArrange.class);
     }
 
     /**
+     * 信息查询 -> 上课任务 -> 查询
+     * <p>
      * 根据学期查课程
      *
-     * @param value 参考 {@link Jwgl#getExamResults(String)} 方法的参数value
+     * @param value 参考 {@link ThxyJwgl#getExamResults(String)} 方法的参数value
      * @return 上课任务实体类集合
      */
     public List<ClassTask> getClassTask(String value) {
@@ -298,18 +351,20 @@ public class Jwgl extends JwglClient {
         forms.put("rows", "999");
         forms.put("sort", "kcbh");
         forms.put("order", "asc");
-        String json = super.postBody(host + "xskktzd!getDataList.action", forms);
+        String json = client.postBody(host + "xskktzd!getDataList.action", forms);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonObject().getAsJsonArray("rows");
         return parseJsonArray(jsonArray, ClassTask.class);
     }
 
     /**
+     * 信息查询 -> 学籍卡片
+     * <p>
      * 查个人信息
      *
      * @return 学生个人信息实体类
      */
     public StudentInfo getStudentInfo() {
-        String html = super.getBody(host + "xjkpxx!xjkpList.action");
+        String html = client.getBody(host + "xjkpxx!xjkpList.action");
         StudentInfo studentInfo = new StudentInfo();
         Document document = Jsoup.parse(html);
         Element form = document.select("form[id=ff]").get(0);
@@ -356,17 +411,18 @@ public class Jwgl extends JwglClient {
     }
 
     /**
-     * 获取学生照片</br>
-     * 先判断是否为 null
+     * 信息查询 -> 学籍卡片 -> 照片
+     * <p>
+     * 获取学生照片
      *
      * @return BufferedImage
      */
     public BufferedImage getStudentImage() {
-        String html = super.getBody(host + "xjkpxx!xjkpList.action");
+        String html = client.getBody(host + "xjkpxx!xjkpList.action");
         Document document = Jsoup.parse(html);
         String imageUrl = host + document.select("img").attr("src");
         try {
-            byte[] b = super.get(imageUrl, null).body().bytes();
+            byte[] b = client.get(imageUrl, null).body().bytes();
             if ("文件不存在".equals(new String(b))) {
                 return null;
             } else {
@@ -377,6 +433,14 @@ public class Jwgl extends JwglClient {
         }
     }
 
+    /**
+     * JsonArray转换成指定的类
+     *
+     * @param jsonArray jsonArray
+     * @param clazz     指定的类
+     * @param <T>       T
+     * @return List<T>
+     */
     private <T> List<T> parseJsonArray(JsonArray jsonArray, Class<T> clazz) {
         List<T> list = new ArrayList<>();
         for (Object e : jsonArray) {

@@ -12,64 +12,78 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * @author LyceumHewun
+ * @date 2018-9-5 MODIFY
+ */
 public interface Client {
 
-    public Response get(String url, Map<String, String> headers) throws IOException;
+    /**
+     * GET方法
+     *
+     * @param url     url
+     * @param headers headers
+     * @return Response
+     * @throws IOException okhttp Exception
+     */
+    Response get(String url, Map<String, String> headers) throws IOException;
 
-    public Response post(String url, Map<String, String> headers, Map<String, String> forms) throws IOException;
+    /**
+     * POST方法
+     *
+     * @param url     url
+     * @param headers headers
+     * @param forms   forms
+     * @return Response
+     * @throws IOException okhttp Exception
+     */
+    Response post(String url, Map<String, String> headers, Map<String, String> forms) throws IOException;
 
-    default String getBody(String url, Map<String, String> headers) {
-        try {
-            return get(url, headers).body().string();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
+    String getBody(String url, Map<String, String> headers, String charsetName);
 
-    default String postBody(String url, Map<String, String> headers, Map<String, String> forms) {
-        try {
-            return post(url, headers, forms).body().string();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
+    String getBody(String url, Map<String, String> headers);
 
-    default String getBody(String url) {
-        return getBody(url, null);
-    }
+    String getBody(String url, String charsetName);
 
-    default String postBody(String url, Map<String, String> forms) {
-        return postBody(url, null, forms);
-    }
+    String getBody(String url);
 
+    String postBody(String url, Map<String, String> headers, Map<String, String> forms, String charsetName);
+
+    String postBody(String url, Map<String, String> headers, Map<String, String> forms);
+
+    String postBody(String url, Map<String, String> forms, String charsetName);
+
+    String postBody(String url, Map<String, String> forms);
+
+    ConcurrentHashMap<String, List<Cookie>> getCookieStore();
+
+    /**
+     * okhttp的cookieJar, 用于管理请求中的cookie
+     * <p>
+     * 这里是每次请求有新的返回cookie就添加到cookieStore
+     *
+     * @param cookieStore cookieStore
+     * @return CookieJar
+     */
     default CookieJar newCookieJar(ConcurrentHashMap<String, List<Cookie>> cookieStore) {
         return new CookieJar() {
             @Override
             public void saveFromResponse(HttpUrl httpUrl, List<Cookie> list) {
-
                 list = new ArrayList<>(list);
-
                 if (!cookieStore.isEmpty()) {
                     for (Cookie cookie1 : cookieStore.get(httpUrl.host())) {
-
                         boolean repeat = false;
-
                         for (Cookie cookie2 : list) {
                             if (Objects.equals(cookie1.name(), cookie2.name())) {
                                 repeat = true;
                                 break;
                             }
                         }
-
-                        // 如果不重复
                         if (!repeat) {
                             list.add(cookie1);
                         }
                     }
                 }
-
                 cookieStore.put(httpUrl.host(), list);
             }
 
