@@ -239,7 +239,7 @@ public class ThxyJwgl {
     }
 
     /**
-     * 信息查询 -> 课表查询
+     * 信息查询 -> 课表查询 -> 我的课表
      * <p>
      * 根据学期和周次查课程
      *
@@ -247,7 +247,7 @@ public class ThxyJwgl {
      * @param week  第几周, 空字符串查全部
      * @return 课程实体类集合
      */
-    public List<Curriculum> getCurriculumByWeek(String value, String week) {
+    public List<Curriculum> getSelfCurriculum(String value, String week) {
         String json = client.getBody(host + "xsgrkbcx!getKbRq.action?xnxqdm=" + value + "&zc=" + week);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray().get(0).getAsJsonArray();
         return parseJsonArray(jsonArray, Curriculum.class);
@@ -262,11 +262,12 @@ public class ThxyJwgl {
      * @param week  第几周, 空字符串查全部
      * @return 课程实体类集合
      */
-    public List<Curriculum> getCurriculum(String value, String week) {
-        String html = client.getBody(host + "xsgrkbcx!xsAllKbList.action?xnxqdm=" + value + "&zc=" + week);
-        html = html.substring(html.indexOf("var kbxx = "));
-        String json = html.substring(11, html.indexOf(";"));
-        JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray();
+    public List<Curriculum> getClassCurriculum(String value, String week) {
+        // 获取班级代码
+        String html0 = client.getBody(host + "xsbjkbcx!xsbjkbMain.action");
+        String bjdm = Jsoup.parse(html0).select("select[id=bjdm]").get(0).children().select("option[selected]").attr("value");
+        String json = client.getBody(host + "/xsbjkbcx!getKbRq.action?xnxqdm=" + value + "&zc=" + week + "&bjdm=" + bjdm);
+        JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray().get(0).getAsJsonArray();
         return parseJsonArray(jsonArray, Curriculum.class);
     }
 
@@ -397,7 +398,7 @@ public class ThxyJwgl {
         studentInfo.setCym(input.get(1).attr("value"));
         studentInfo.setCsrq(input.get(2).attr("value"));
         studentInfo.setJgjtdz(input.get(3).attr("value"));
-        //证件号
+        // 证件号, 千万不要在违法犯罪的边缘疯狂试探
 //        input.get(4).attr("value")
         studentInfo.setYzbm(input.get(5).attr("value"));
         studentInfo.setRxrq(input.get(6).attr("value"));

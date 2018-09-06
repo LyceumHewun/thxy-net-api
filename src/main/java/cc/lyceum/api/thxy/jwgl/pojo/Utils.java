@@ -1,7 +1,13 @@
 package cc.lyceum.api.thxy.jwgl.pojo;
 
+import java.text.DecimalFormat;
 import java.util.*;
+import java.util.function.Function;
 
+/**
+ * @author LyceumHewun
+ * @date 2018-9-6 MODIFY
+ */
 public class Utils {
 
     private static Map<String, String> result_map = new HashMap<>();
@@ -61,5 +67,96 @@ public class Utils {
      */
     public static String valueToXqxnmc(String value) {
         return result_map.getOrDefault(value, "");
+    }
+
+    /**
+     * 个人课表和班级课表合并</br>
+     * 前者优先级较后者大, 相同周次、星期和节次, 选择前者。
+     * 不相同, 则合并
+     *
+     * @param lists 个人课表和班级课表
+     * @return 课程实体类集合
+     */
+    public static List<Curriculum> sumCurriculumList(List<Curriculum>... lists) {
+        List<Curriculum> result = new ArrayList<>();
+        // 按周次分类
+        Map<String, List<Curriculum>> selfCurriculum = classified(lists[0], Curriculum::getZc);
+        Map<String, List<Curriculum>> classCurriculum = classified(lists[1], Curriculum::getZc);
+        // 1-22周
+        for (int zc = 1; zc <= 22; zc++) {
+            List<Curriculum> selfCurriculumListByZc = selfCurriculum.get("" + zc);
+            List<Curriculum> classCurriculumListByZc = classCurriculum.get("" + zc);
+            // 按星期分类
+            Map<String, List<Curriculum>> selfCurriculumByXq = classified(selfCurriculumListByZc, Curriculum::getXq);
+            Map<String, List<Curriculum>> classCurriculumByXq = classified(classCurriculumListByZc, Curriculum::getXq);
+            // 星期1-5
+            for (int xq = 1; xq <= 5; xq++) {
+                if (null == selfCurriculumByXq || null == classCurriculumByXq){
+                    break;
+                }
+                List<Curriculum> selfCurriculumListByXq = selfCurriculumByXq.getOrDefault("" + xq, null);
+                List<Curriculum> classCurriculumListByXq = classCurriculumByXq.getOrDefault("" + xq, null);
+                // 按节次分类, 两节的当成第一节, 如 0304 当成 03
+                Map<String, List<Curriculum>> selfCurriculumByJc = classified(selfCurriculumListByXq, c -> c.getJcdm().substring(0, 2));
+                Map<String, List<Curriculum>> classCurriculumByJc = classified(classCurriculumListByXq, c -> c.getJcdm().substring(0, 2));
+                // 1-11节
+                for (int jc = 1; jc <= 11; jc++) {
+                    if (null == selfCurriculumByJc || null == classCurriculumByJc){
+                        break;
+                    }
+                    String key = new DecimalFormat("00").format(jc);
+                    List<Curriculum> selfCurriculumListByJc = selfCurriculumByJc.getOrDefault(key, null);
+                    List<Curriculum> classCurriculumListByJc = classCurriculumByJc.getOrDefault(key, null);
+                    if (isCoincide(selfCurriculumListByJc, classCurriculumListByJc)) {
+                        // 相同
+                        result.add(selfCurriculumListByJc.get(0));
+                    } else {
+                        // 不同
+                        if (null != selfCurriculumListByJc) {
+                            result.add(selfCurriculumListByJc.get(0));
+                        } else if (null != classCurriculumListByJc) {
+                            result.add(classCurriculumListByJc.get(0));
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 对比课程名称
+     *
+     * @param lists lists
+     * @return boolean
+     */
+    private static boolean isCoincide(List<Curriculum>... lists) {
+        return lists[0] != null && lists[1] != null && lists[0].get(0).getKcmc().equals(lists[1].get(0).getKcmc());
+    }
+
+    /**
+     * 分类
+     *
+     * @param list     课表
+     * @param function function
+     * @return Map<String, List<Curriculum>>
+     */
+    private static Map<String, List<Curriculum>> classified(List<Curriculum> list, Function<Curriculum, String> function) {
+        Map<String, List<Curriculum>> resultMap = new HashMap<>();
+        if (null == list) {
+            return null;
+        }
+        list.forEach(v -> {
+            String key = function.apply(v);
+            // 按照周次分类
+            if (resultMap.containsKey(key)) {
+                List<Curriculum> oldList = new ArrayList(resultMap.get(key));
+                oldList.add(v);
+                resultMap.put(key, oldList);
+            } else {
+                resultMap.put(key, Collections.singletonList(v));
+            }
+        });
+        return resultMap;
     }
 }
