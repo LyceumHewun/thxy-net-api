@@ -74,14 +74,15 @@ public class Utils {
      * 前者优先级较后者大, 相同周次、星期和节次, 选择前者。
      * 不相同, 则合并
      *
-     * @param lists 个人课表和班级课表
+     * @param list1 个人课表
+     * @param list2 班级课表
      * @return 课程实体类集合
      */
-    public static List<Curriculum> sumCurriculumList(List<Curriculum>... lists) {
+    public static List<Curriculum> sumCurriculumList(List<Curriculum> list1, List<Curriculum> list2) {
         List<Curriculum> result = new ArrayList<>();
         // 按周次分类
-        Map<String, List<Curriculum>> selfCurriculum = classified(lists[0], Curriculum::getZc);
-        Map<String, List<Curriculum>> classCurriculum = classified(lists[1], Curriculum::getZc);
+        Map<String, List<Curriculum>> selfCurriculum = classified(list1, Curriculum::getZc);
+        Map<String, List<Curriculum>> classCurriculum = classified(list2, Curriculum::getZc);
         // 1-22周
         for (int zc = 1; zc <= 22; zc++) {
             List<Curriculum> selfCurriculumListByZc = selfCurriculum.get("" + zc);
@@ -127,11 +128,12 @@ public class Utils {
     /**
      * 对比课程名称
      *
-     * @param lists lists
+     * @param list1 lists
+     * @param list2 lists
      * @return boolean
      */
-    private static boolean isCoincide(List<Curriculum>... lists) {
-        return lists[0] != null && lists[1] != null && lists[0].get(0).getKcmc().equals(lists[1].get(0).getKcmc());
+    private static boolean isCoincide(List<Curriculum> list1, List<Curriculum> list2) {
+        return list1 != null && list2 != null && list1.get(0).getKcmc().equals(list1.get(0).getKcmc());
     }
 
     /**
