@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static cc.lyceum.api.thxy.ConfigGlobal.JWGL_HOST;
+
 /**
  * 教务系统
  *
@@ -29,7 +31,7 @@ public class ThxyJwgl {
     private Gson gson = new Gson();
     private JsonParser jsonParser = new JsonParser();
 
-    private String host = "http://jwgl.thxy.cn/";
+    private String host = JWGL_HOST;
 
     public ThxyJwgl() {
     }

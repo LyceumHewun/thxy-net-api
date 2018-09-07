@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static cc.lyceum.api.thxy.ConfigGlobal.SELF_HOST;
+
 /**
  * 自助平台
  *
@@ -23,7 +25,7 @@ public class ThxySelfService {
 
     private Client client = ClientFactory.creatClient();
 
-    private String host = "http://self.thxy.cn:8080/selfservice/";
+    private String host = SELF_HOST;
 
     public ThxySelfService() {
     }

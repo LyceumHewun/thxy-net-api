@@ -1,5 +1,7 @@
 package cc.lyceum.api.thxy.jwgl.pojo;
 
+import cc.lyceum.api.thxy.jwgl.ThxyJwgl;
+
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.function.Function;
@@ -92,32 +94,38 @@ public class Utils {
             Map<String, List<Curriculum>> classCurriculumByXq = classified(classCurriculumListByZc, Curriculum::getXq);
             // 星期1-5
             for (int xq = 1; xq <= 5; xq++) {
-                if (null == selfCurriculumByXq || null == classCurriculumByXq){
+                if (null == selfCurriculumByXq && null == classCurriculumByXq) {
                     break;
                 }
-                List<Curriculum> selfCurriculumListByXq = selfCurriculumByXq.getOrDefault("" + xq, null);
-                List<Curriculum> classCurriculumListByXq = classCurriculumByXq.getOrDefault("" + xq, null);
+                List<Curriculum> selfCurriculumListByXq = null;
+                if (null != selfCurriculumByXq) {
+                    selfCurriculumListByXq = selfCurriculumByXq.getOrDefault("" + xq, null);
+                }
+                List<Curriculum> classCurriculumListByXq = null;
+                if (null != classCurriculumByXq) {
+                    classCurriculumListByXq = classCurriculumByXq.getOrDefault("" + xq, null);
+                }
                 // 按节次分类, 两节的当成第一节, 如 0304 当成 03
                 Map<String, List<Curriculum>> selfCurriculumByJc = classified(selfCurriculumListByXq, c -> c.getJcdm().substring(0, 2));
                 Map<String, List<Curriculum>> classCurriculumByJc = classified(classCurriculumListByXq, c -> c.getJcdm().substring(0, 2));
                 // 1-11节
                 for (int jc = 1; jc <= 11; jc++) {
-                    if (null == selfCurriculumByJc || null == classCurriculumByJc){
+                    if (null == selfCurriculumByJc && null == classCurriculumByJc) {
                         break;
                     }
                     String key = new DecimalFormat("00").format(jc);
-                    List<Curriculum> selfCurriculumListByJc = selfCurriculumByJc.getOrDefault(key, null);
-                    List<Curriculum> classCurriculumListByJc = classCurriculumByJc.getOrDefault(key, null);
-                    if (isCoincide(selfCurriculumListByJc, classCurriculumListByJc)) {
-                        // 相同
-                        result.add(selfCurriculumListByJc.get(0));
-                    } else {
-                        // 不同
-                        if (null != selfCurriculumListByJc) {
-                            result.add(selfCurriculumListByJc.get(0));
-                        } else if (null != classCurriculumListByJc) {
-                            result.add(classCurriculumListByJc.get(0));
-                        }
+                    List<Curriculum> selfCurriculumListByJc = null;
+                    if (null != selfCurriculumByJc) {
+                        selfCurriculumListByJc = selfCurriculumByJc.getOrDefault(key, null);
+                    }
+                    List<Curriculum> classCurriculumListByJc = null;
+                    if (null != classCurriculumByJc) {
+                        classCurriculumListByJc = classCurriculumByJc.getOrDefault(key, null);
+                    }
+                    if (null != selfCurriculumListByJc) {
+                        result.addAll(selfCurriculumListByJc);
+                    } else if (null != classCurriculumListByJc) {
+                        result.addAll(classCurriculumListByJc);
                     }
                 }
             }
@@ -125,15 +133,8 @@ public class Utils {
         return result;
     }
 
-    /**
-     * 对比课程名称
-     *
-     * @param list1 lists
-     * @param list2 lists
-     * @return boolean
-     */
-    private static boolean isCoincide(List<Curriculum> list1, List<Curriculum> list2) {
-        return list1 != null && list2 != null && list1.get(0).getKcmc().equals(list1.get(0).getKcmc());
+    public static List<Curriculum> sumCurriculumList(ThxyJwgl jwgl, String value, String week) {
+        return sumCurriculumList(jwgl.getSelfCurriculum(value, week), jwgl.getClassCurriculum(value, week));
     }
 
     /**
@@ -150,9 +151,8 @@ public class Utils {
         }
         list.forEach(v -> {
             String key = function.apply(v);
-            // 按照周次分类
             if (resultMap.containsKey(key)) {
-                List<Curriculum> oldList = new ArrayList(resultMap.get(key));
+                List<Curriculum> oldList = new ArrayList<>(resultMap.get(key));
                 oldList.add(v);
                 resultMap.put(key, oldList);
             } else {

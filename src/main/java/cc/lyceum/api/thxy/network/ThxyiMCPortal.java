@@ -11,6 +11,8 @@ import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
+import static cc.lyceum.api.thxy.ConfigGlobal.IMC_HOST;
+
 /**
  * 校园网WiFi登陆入口
  *
@@ -21,7 +23,7 @@ public class ThxyiMCPortal {
 
     private Client client = ClientFactory.creatClient();
 
-    private String host = "http://10.0.8.9:8080/";
+    private String host = IMC_HOST;
 
     public ThxyiMCPortal() {
     }

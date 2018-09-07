@@ -14,6 +14,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static cc.lyceum.api.thxy.ConfigGlobal.HQC_BX_HOST;
+import static cc.lyceum.api.thxy.ConfigGlobal.HQC_CD_HOST;
+
 /**
  * 后勤处
  *
@@ -27,11 +30,11 @@ public class ThxyHqc {
     /**
      * 保修
      */
-    private String host1 = "http://10.0.8.48/";
+    private String host1 = HQC_BX_HOST;
     /**
      * 查电
      */
-    private String host2 = "http://10.0.8.50/";
+    private String host2 = HQC_CD_HOST;
 
     public ThxyHqc() {
     }
