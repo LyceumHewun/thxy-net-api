@@ -2,10 +2,7 @@ package cc.lyceum.api.thxy.logistics;
 
 import cc.lyceum.api.thxy.Client;
 import cc.lyceum.api.thxy.ClientFactory;
-import cc.lyceum.api.thxy.logistics.pojo.Ammeter;
-import cc.lyceum.api.thxy.logistics.pojo.FreeInfo;
-import cc.lyceum.api.thxy.logistics.pojo.PaymentRecord;
-import cc.lyceum.api.thxy.logistics.pojo.UseInfo;
+import cc.lyceum.api.thxy.logistics.pojo.*;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 
@@ -159,6 +156,14 @@ public class ThxyHqc {
         return repairOrder;
     }
 
+    /**
+     * FIXME dorm没有'栋'字不能用
+     */
+    public String sendRepairOrder(String username, String telephone, String dorm, String Gzlx_ID, String description) {
+        String Building_ID = Utils.RepairOrderDorm.strToSectId(dorm);
+        String Room_ID = Utils.RepairOrderDorm.strToDormId(dorm);
+        return sendRepairOrder(username, telephone, Building_ID, Room_ID, Gzlx_ID, description);
+    }
 
     /**
      * 登陆电费系统
@@ -235,6 +240,15 @@ public class ThxyHqc {
         } else {
             return "success";
         }
+    }
+
+    /**
+     * FIXME dorm没有'栋'字不能用
+     */
+    public String login(String dorm, String user_pass) {
+        String sectid = Utils.Dorm.strToSectId(dorm);
+        String user_no = Utils.Dorm.strToDormId(dorm);
+        return login(sectid, user_no, user_pass);
     }
 
     /**

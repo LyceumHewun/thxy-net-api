@@ -49,9 +49,11 @@ public class ThxyJwgl {
      */
     public String login(String userNumber, String password) {
         // 验证码识别
-        String code = Dictionary.contrast(new ImageHelper(getCodeImge())
-                .filling()
-                .spilt());
+        List<BufferedImage> bufferedImageList = new ImageHelper(getCodeImge()).filling().removeInterference().spilt();
+        if (null == bufferedImageList) {
+            return login(userNumber, password);
+        }
+        String code = Dictionary.contrast(bufferedImageList);
         Map<String, String> forms = new HashMap<>();
         forms.put("account", userNumber);
         forms.put("pwd", password);
