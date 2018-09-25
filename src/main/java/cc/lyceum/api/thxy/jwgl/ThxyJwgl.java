@@ -49,11 +49,9 @@ public class ThxyJwgl {
      */
     public String login(String userNumber, String password) {
         // 验证码识别
-        List<BufferedImage> bufferedImageList = new ImageHelper(getCodeImge()).filling().removeInterference().spilt();
-        if (null == bufferedImageList) {
-            return login(userNumber, password);
-        }
-        String code = Dictionary.contrast(bufferedImageList);
+        String code = Dictionary.contrast(new ImageHelper(getCodeImge())
+                .filling()
+                .spilt());
         Map<String, String> forms = new HashMap<>();
         forms.put("account", userNumber);
         forms.put("pwd", password);
@@ -436,6 +434,78 @@ public class ThxyJwgl {
         } catch (IOException ignored) {
             return null;
         }
+    }
+
+    /**
+     * 选课报名 -> 个人选课 -> 可选课程
+     * <p>
+     * 获取可选选修列表
+     *
+     * @return List<Elective>
+     */
+    public List<Elective> getCanChooseElective() {
+        Map<String, String> forms = new HashMap<>();
+        forms.put("page", "1");
+        forms.put("rows", "9999");
+        forms.put("sort", "kcrwdm");
+        forms.put("order", "asc");
+        String json = client.postBody(host + "xsxklist!getDataList.action", forms);
+        JsonArray jsonArray = jsonParser.parse(json).getAsJsonObject().get("rows").getAsJsonArray();
+        return parseJsonArray(jsonArray, Elective.class);
+    }
+
+    /**
+     * 选课报名 -> 个人选课 -> 已选课程
+     * <p>
+     * 获取已选选修列表
+     *
+     * @return List<Elective>
+     */
+    public List<Elective> getChoseElective() {
+        Map<String, String> forms = new HashMap<>();
+        forms.put("sort", "kcrwdm");
+        forms.put("order", "asc");
+        String json = client.postBody(host + "xsxklist!getXzkcList.action", forms);
+        JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray();
+        return parseJsonArray(jsonArray, Elective.class);
+    }
+
+    /**
+     * 选课报名 -> 个人选课
+     * <p>
+     * 选选修
+     * <p>
+     * 成功返回 1(String)
+     *
+     * @param kcrwdm 课程任务代码
+     * @param kcmc   课程名称
+     * @return String
+     */
+    public String addElective(String kcrwdm, String kcmc) {
+        Map<String, String> forms = new HashMap<>();
+        forms.put("kcrwdm", kcrwdm);
+        forms.put("kcmc", kcmc);
+        return client.postBody(host + "xsxklist!getAdd.action", forms);
+    }
+
+    /**
+     * 选课报名 -> 个人选课
+     * <p>
+     * 取消已选选修
+     * <p>
+     * 成功返回 1(String)
+     *
+     * @param jxbdm  教学班代码
+     * @param kcrwdm 课程任务代码
+     * @param kcmc   课程名称
+     * @return String
+     */
+    public String removeElective(String jxbdm, String kcrwdm, String kcmc) {
+        Map<String, String> forms = new HashMap<>();
+        forms.put("jxbdm", jxbdm);
+        forms.put("kcrwdm", kcrwdm);
+        forms.put("kcmc", kcmc);
+        return client.postBody(host + "xsxklist!getCancel.action", forms);
     }
 
     /**
