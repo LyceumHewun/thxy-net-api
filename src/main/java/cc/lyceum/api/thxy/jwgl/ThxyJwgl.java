@@ -86,8 +86,14 @@ public class ThxyJwgl {
             ByteArrayInputStream in = new ByteArrayInputStream(client.get(host + "yzm", null).body().bytes());
             return ImageIO.read(in);
         } catch (IOException ignored) {
-            return null;
+            // 输出错误
+            String html = client.getBody(host + "yzm");
+            System.err.println("/////////////////////////////");
+            System.err.println("/////////thxy-net-api////////");
+            System.err.println("/////////////////////////////");
+            System.err.println(html);
         }
+        return null;
     }
 
     /**
