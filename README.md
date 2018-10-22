@@ -74,7 +74,7 @@
 - 查考试安排
 - 查个人信息
 - 获取个人照片
-- 抢课（暂未实现）
+- 抢课
 - 评教（暂未实现）
 
 ### 2.自助平台 (http://self.thxy.cn:8080/)
@@ -100,38 +100,6 @@
 - 查用电情况
 - 查免费电
 - 查缴费记录
-
-## 演示
-
-### 1.教务系统查成绩
-
-```java
-Jwgl jwgl = new Jwgl();
-String reslut = jwgl.login("学号", "密码");
-if ("登陆成功".equals(reslut)) {
-    jwgl.getExamResults("201702").forEach(System.out::println);
-} else {
-    System.err.println(reslut);
-}
-```
-
-### 2.自助平台查余额
-
-```java
-NetSys netSys = new NetSys();
-String result = netSys.login("学号", "密码");
-if ("success".equals(result)) {
-    netSys.getInfo().forEach((k, v) -> System.out.println(v));
-} else {
-    System.err.println(result);
-}
-```
-
-## 反馈
-
-可以扫下面的二维码添加公众号进行反馈
-
-![wechat](https://coding.net/u/Lyceum/p/thxy-net-api/git/raw/master/demo/image/wechat.jpg)
 
 ## License
 
