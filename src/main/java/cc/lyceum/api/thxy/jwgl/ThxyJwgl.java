@@ -274,7 +274,7 @@ public class ThxyJwgl {
         // 获取班级代码
         String html0 = client.getBody(host + "xsbjkbcx!xsbjkbMain.action");
         String bjdm = Jsoup.parse(html0).select("select[id=bjdm]").get(0).children().select("option[selected]").attr("value");
-        String json = client.getBody(host + "/xsbjkbcx!getKbRq.action?xnxqdm=" + value + "&zc=" + week + "&bjdm=" + bjdm);
+        String json = client.getBody(host + "xsbjkbcx!getKbRq.action?xnxqdm=" + value + "&zc=" + week + "&bjdm=" + bjdm);
         JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray().get(0).getAsJsonArray();
         return parseJsonArray(jsonArray, Curriculum.class);
     }
