@@ -70,7 +70,7 @@ public class HttpClient extends AbstractClient {
         if (response.isSuccessful()) {
             return response;
         } else if (response.code() == 404) {
-            return get(url, headers);
+            return post(url, headers, forms);
         } else {
             return null;
         }
