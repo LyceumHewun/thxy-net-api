@@ -40,6 +40,8 @@ public class HttpClient extends AbstractClient {
         Response response = okHttpClient.newCall(request).execute();
         if (response.isSuccessful()) {
             return response;
+        } else if (response.code() == 404) {
+            return get(url, headers);
         } else {
             return null;
         }
@@ -67,6 +69,8 @@ public class HttpClient extends AbstractClient {
         Response response = okHttpClient.newCall(request).execute();
         if (response.isSuccessful()) {
             return response;
+        } else if (response.code() == 404) {
+            return get(url, headers);
         } else {
             return null;
         }
