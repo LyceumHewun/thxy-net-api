@@ -47,6 +47,17 @@ public interface Client {
 
     String getBody(String url);
 
+    default String getBody(String url, Map<String, String> parameter, Map<String, String> headers) {
+        if (parameter.size() != 0) {
+            url += "?";
+        }
+        for (Map.Entry<String, String> entry : parameter.entrySet()) {
+            url += entry.getKey() + "=" + entry.getValue() + "&";
+        }
+        url = url.substring(0, url.length() - 1);
+        return getBody(url, headers);
+    }
+
     String postBody(String url, Map<String, String> headers, Map<String, String> forms, String charsetName);
 
     String postBody(String url, Map<String, String> headers, Map<String, String> forms);
@@ -90,6 +101,13 @@ public interface Client {
             @Override
             public List<Cookie> loadForRequest(HttpUrl httpUrl) {
                 List<Cookie> cookies = cookieStore.get(httpUrl.host());
+////                手动设置cookie测试
+//                List<Cookie> cookies = new ArrayList<>();
+//                Cookie cookie = new Cookie.Builder().name("JSESSIONID")
+//                        .value("170D7DAE308A049B50E92862D71829AC")
+//                        .hostOnlyDomain("jwgl.thxy.cn")
+//                        .build();
+//                cookies.add(cookie);
                 return cookies != null ? cookies : new ArrayList<>();
             }
         };

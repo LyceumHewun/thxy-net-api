@@ -40,8 +40,6 @@ public class HttpClient extends AbstractClient {
         Response response = okHttpClient.newCall(request).execute();
         if (response.isSuccessful()) {
             return response;
-        } else if (response.code() == 404) {
-            return get(url, headers);
         } else {
             return null;
         }
@@ -61,16 +59,21 @@ public class HttpClient extends AbstractClient {
             headers.forEach(requestBuilder::addHeader);
         }
         if (forms != null) {
-            FormBody.Builder formBody = new FormBody.Builder();
-            forms.forEach(formBody::add);
-            requestBuilder.post(formBody.build());
+//            FormBody.Builder formBody = new FormBody.Builder();
+//            forms.forEach(formBody::add);
+//            requestBuilder.post(formBody.build());
+            StringBuilder stringBuffer = new StringBuilder();
+            for (String key : forms.keySet()) {
+                stringBuffer.append(key).append("=").append(forms.get(key)).append("&");
+            }
+            RequestBody body = RequestBody.create(MediaType.parse("application/x-www-form-urlencoded; charset=utf-8")
+                    , stringBuffer.toString());
+            requestBuilder.post(body);
         }
         Request request = requestBuilder.build();
         Response response = okHttpClient.newCall(request).execute();
         if (response.isSuccessful()) {
             return response;
-        } else if (response.code() == 404) {
-            return post(url, headers, forms);
         } else {
             return null;
         }

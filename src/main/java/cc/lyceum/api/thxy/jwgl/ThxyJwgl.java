@@ -13,10 +13,14 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static cc.lyceum.api.thxy.ConfigGlobal.JWGL_HOST;
+import static cc.lyceum.api.thxy.jwgl.tools.Escape.escape;
 
 /**
  * 教务系统
@@ -57,10 +61,14 @@ public class ThxyJwgl {
         forms.put("pwd", password);
         forms.put("verifycode", code);
         String json = client.postBody(host + "login!doLogin.action", forms);
+        System.out.println(json);
         JsonObject jsonObject = jsonParser.parse(json).getAsJsonObject();
         boolean status = jsonObject.get("status").getAsString().equals("y");
         String message = jsonObject.get("msg").getAsString();
         if (status) {
+            // 登录成功后访问一次login!welcome.action
+            // 2019-01-10 更新的低级反爬策略
+            client.getBody(host + "login!welcome.action");
             return "success";
         } else if (message.contains("验证码不正确")) {
             return login(userNumber, password);
@@ -515,6 +523,155 @@ public class ThxyJwgl {
     }
 
     /**
+     * 选课报名 -> 问卷调查 -> 教师评价
+     * <p>
+     * 获取教师评价列表
+     *
+     * @param value 参考 {@link ThxyJwgl#getExamResults(String)} 方法的参数value
+     * @return 教师评价实体类
+     */
+    public List<TeacherEvaluation> getTeacherEvaluationList(String value) {
+        Map<String, String> forms = new HashMap<>();
+        forms.put("xnxqdm", value);
+        forms.put("page", "1");
+        forms.put("rows", "999");
+        forms.put("sort", "pdm");
+        forms.put("order", "asc");
+        String json = client.postBody(host + "xswjxx!getTeaDataList.action", forms);
+        JsonArray jsonArray = jsonParser.parse(json).getAsJsonObject().get("rows").getAsJsonArray();
+        List<TeacherEvaluation> teacherEvaluationList = parseJsonArray(jsonArray, TeacherEvaluation.class);
+        // 获取评教状态
+        String html = client.getBody(host + "xswjxx!teaList.action");
+        int index = html.indexOf("var finished = JSON.parse('");
+        int index2 = html.indexOf(";", index);
+        json = html.substring(index + 27, index2 - 2);
+        jsonParser.parse(json).getAsJsonArray().forEach(jsonElement -> {
+            String pdm = jsonElement.getAsJsonObject().get("pdm").getAsString();
+            teacherEvaluationList.forEach(t -> {
+                if (pdm.equals(t.getPdm())) {
+                    t.setZt("1");
+                }
+            });
+        });
+        return teacherEvaluationList;
+    }
+
+    /**
+     * 一键评教, 满分
+     *
+     * @param teacherEvaluation 教师评价实体类
+     * @param xmbh              评分(A/B/C/D/E), 最多十个选项, 默认A
+     * @return "1" = success
+     */
+    public String teacherEvaluation(TeacherEvaluation teacherEvaluation, String... xmbh) {
+        if ("1".equals(teacherEvaluation.getZt())) {
+            return "该教师已评价";
+        }
+        int length = xmbh.length;
+        // 大写
+        for (int i = 0; i < length; i++) {
+            xmbh[i] = xmbh[i].toUpperCase();
+        }
+        if (length < 10) {
+            // 扩容
+            xmbh = Arrays.copyOf(xmbh, 10);
+            // 补全
+            for (int i = length; i < 10; i++) {
+                xmbh[i] = "A";
+            }
+        }
+        Map<String, String> parameter = new HashMap<>();
+        parameter.put("jxhjmc", jwglEncode(teacherEvaluation.getJxhjmc()));
+        parameter.put("kcmc", jwglEncode(teacherEvaluation.getKcmc()));
+        parameter.put("pdm", teacherEvaluation.getPdm());
+        parameter.put("xnxqdm", teacherEvaluation.getXnxqdm());
+        parameter.put("wjdm", teacherEvaluation.getWjdm());
+        parameter.put("isyxf", teacherEvaluation.getIsyxf());
+        parameter.put("yxfbl", teacherEvaluation.getYxfbl());
+        parameter.put("isyjjy", teacherEvaluation.getIsyjjy());
+        parameter.put("yjjymc", jwglEncode(teacherEvaluation.getYjjymc()));
+        parameter.put("teaxm", jwglEncode(teacherEvaluation.getPjdxmc()));
+        parameter.put("wjlx", teacherEvaluation.getWjlx());
+        parameter.put("pjdxdm", teacherEvaluation.getPjdxdm());
+        parameter.put("pjdxlxdm", teacherEvaluation.getPjdxlxdm());
+        parameter.put("jxhjdm", teacherEvaluation.getJxhjdm());
+        parameter.put("kcptdm", teacherEvaluation.getKcptdm());
+        parameter.put("pjlxdm", teacherEvaluation.getPjlxdm());
+        parameter.put("pjdxbh", teacherEvaluation.getPjdxbh());
+        parameter.put("isdczbzl", teacherEvaluation.getIsdczbzl());
+        parameter.put("pjdxbh", teacherEvaluation.getPjdxbh());
+        parameter.put("_", String.valueOf(System.currentTimeMillis()));
+        String html = client.getBody(host + "xswjxx!pjTea.action", parameter, (Map<String, String>) null);
+        // 解析评价题目
+        int index = html.indexOf("var wt = JSON.parse('");
+        int index2 = html.indexOf(";", index);
+        String json = html.substring(index + 21, index2 - 2);
+        JsonArray jsonArray = jsonParser.parse(json).getAsJsonArray();
+        List<TeacherEvaluation.EvaluationTopic> evaluationTopicList = parseJsonArray(jsonArray, TeacherEvaluation.EvaluationTopic.class);
+        // 解析评价选项
+        index = html.indexOf("var wtxm = JSON.parse('");
+        index2 = html.indexOf(";", index);
+        json = html.substring(index + 23, index2 - 2);
+        jsonArray = jsonParser.parse(json).getAsJsonArray();
+        List<TeacherEvaluation.EvaluationOption> evaluationOptionList = parseJsonArray(jsonArray, TeacherEvaluation.EvaluationOption.class);
+        // 一键评分
+        int wtpf = 0;
+        String wtdms = "";
+        String xmdmvals = "";
+        String xmmcs = "";
+        String xzfzs = "";
+
+        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+
+        System.out.println(teacherEvaluation.getPjdxmc() + " " + teacherEvaluation.getKcmc());
+        for (int i = 0; i < evaluationTopicList.size(); i++) {
+            for (TeacherEvaluation.EvaluationOption option : evaluationOptionList) {
+                if (evaluationTopicList.get(i).getWtdm().equals(option.getWtdm())
+                        && xmbh[i].equals(option.getXmbh())) {
+                    double fzbl = Double.valueOf(option.getFzbl()) / evaluationTopicList.size();
+                    wtpf += fzbl;
+                    wtdms += option.getWtdm() + ",";
+                    xmdmvals += option.getXmdm() + ",";
+                    xmmcs += option.getXmmc() + ",";
+                    xzfzs += decimalFormat.format(fzbl) + ",";
+
+                    System.out.println(option.getXmmc() + "-----" + evaluationTopicList.get(i).getWtmc());
+                }
+            }
+        }
+        System.out.println();
+
+        // 删除最后一个逗号
+        wtdms = wtdms.substring(0, wtdms.length() - 1);
+        xmdmvals = xmdmvals.substring(0, xmdmvals.length() - 1);
+        xmmcs = xmmcs.substring(0, xmmcs.length() - 1);
+        xzfzs = xzfzs.substring(0, xzfzs.length() - 1);
+
+        // 构造表单
+        Map<String, String> forms = new HashMap<>();
+        forms.put("pdm", teacherEvaluation.getPdm());
+        forms.put("wjdm", teacherEvaluation.getWjdm());
+        forms.put("pjdxlxdm", teacherEvaluation.getPjdxlxdm());
+        forms.put("pjlxdm", teacherEvaluation.getPjlxdm());
+        forms.put("kcptdm", teacherEvaluation.getKcptdm());
+        forms.put("pjdxbh", teacherEvaluation.getPjdxbh());
+        forms.put("pjdxdm", teacherEvaluation.getPjdxdm());
+        forms.put("xnxqdm", teacherEvaluation.getXnxqdm());
+        forms.put("pjdxmc", teacherEvaluation.getPjdxmc());
+        // 总评分
+        forms.put("wtpf", String.valueOf(wtpf));
+        // 滑块评分 禁用的
+        forms.put("yxf", "");
+        // 建议
+        forms.put("jy", "");
+        forms.put("wtdms", wtdms);
+        forms.put("xmdmvals", xmdmvals);
+        forms.put("xmmcs", xmmcs);
+        forms.put("xzfzs", xzfzs);
+        return client.postBody(host + "xswjxx!savePj.action", forms);
+    }
+
+    /**
      * JsonArray转换成指定的类
      *
      * @param jsonArray jsonArray
@@ -528,5 +685,17 @@ public class ThxyJwgl {
             list.add(gson.fromJson((JsonElement) e, clazz));
         }
         return list;
+    }
+
+    private String jwglEncode(String str) {
+        return urlEncoder(escape(str));
+    }
+
+    private String urlEncoder(String str) {
+        try {
+            return URLEncoder.encode(str, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            return str;
+        }
     }
 }
